@@ -1,0 +1,6 @@
+user_id,avg_budget_per_day,preferred_trip_length,interest_nature,interest_heritage,interest_nightlife
+u1,1500,3,1,1,0
+u2,800,2,1,0,1
+u3,2000,4,0,1,0
+u4,1000,2,1,1,1
+u5,500,1,1,0,0
