@@ -1,11 +1,24 @@
 const express = require("express");
 const axios = require("axios");
 const Trip = require("../models/Trip");
+const authMiddleware = require("../middleware/authMiddleware");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 const PYTHON_BASE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:5001";
 
-router.post("/plan", async (req, res) => {
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const decoded = jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
+      req.userId = decoded.userId;
+    } catch { }
+  }
+  next();
+}
+
+router.post("/plan", optionalAuth, async (req, res) => {
   try {
     const body = req.body;
 
@@ -33,13 +46,53 @@ router.post("/plan", async (req, res) => {
 
     const trip = await Trip.create({
       ...body,
+      userId: req.userId || null,
       result: pythonRes.data,
     });
 
-    res.json(trip.result);
+    res.json({ ...trip.result, _tripId: trip._id });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to plan trip" });
+  }
+});
+
+router.post("/save/:id", authMiddleware, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ error: "Trip not found" });
+    if (trip.userId && trip.userId.toString() !== req.userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    trip.userId = req.userId;
+    trip.saved = true;
+    trip.title = req.body.title || `${trip.city} — ${trip.num_days} day${trip.num_days > 1 ? "s" : ""}`;
+    await trip.save();
+    res.json({ message: "Itinerary saved", trip });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to save itinerary" });
+  }
+});
+
+router.get("/saved", authMiddleware, async (req, res) => {
+  try {
+    const trips = await Trip.find({ userId: req.userId, saved: true }).sort({ createdAt: -1 });
+    res.json(trips);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to fetch saved trips" });
+  }
+});
+
+router.delete("/saved/:id", authMiddleware, async (req, res) => {
+  try {
+    const trip = await Trip.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    if (!trip) return res.status(404).json({ error: "Trip not found" });
+    res.json({ message: "Trip deleted" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to delete trip" });
   }
 });
 

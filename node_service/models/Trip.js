@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 const TripSchema = new mongoose.Schema(
   {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    saved: { type: Boolean, default: false },
+    title: { type: String, default: "" },
     city: String,
     budget: Number,
     num_days: Number,
