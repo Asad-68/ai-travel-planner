@@ -1,71 +1,194 @@
+"""
+models/genai.py
+---------------
+Gemini API integration for:
+  • Itinerary narrative generation
+  • Travel chatbot with conversation memory
+
+Improvements:
+  • ConversationMemory class with rolling-window truncation
+  • Compact prompts to reduce token usage
+  • Configurable model name (via config.py / env var)
+  • Specific fallback messages for different error types
+  • All public functions have thorough docstrings
+"""
+
+from __future__ import annotations
+
+import logging
 import os
+from collections import deque
+from typing import Deque, List, Tuple
+
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+from config import CHAT_MEMORY_TURNS, GEMINI_MODEL_NAME, NARRATIVE_MAX_WORDS
+
 load_dotenv(override=True)
 
-API_KEY = os.environ.get("GEMINI_API_KEY")
+logger = logging.getLogger(__name__)
 
-if API_KEY:
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel('gemini-flash-latest')
+# ─── Model Initialisation ─────────────────────────────────────────────────────
+
+_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+if _API_KEY:
+    genai.configure(api_key=_API_KEY)
+    _model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+    logger.info("Gemini model initialised: %s", GEMINI_MODEL_NAME)
 else:
-    model = None
+    _model = None
+    logger.warning("GEMINI_API_KEY not set — AI features disabled.")
 
-def generate_itinerary_narrative(city, day_plan, user_preferences):
-    if not model:
-        return "AI narration unavailable (API Key missing)."
 
-    pois = ", ".join([p['name'] for p in day_plan])
-    interests = ", ".join([k for k, v in user_preferences.items() if v == 1])
+# ─── Conversation Memory ──────────────────────────────────────────────────────
 
+class ConversationMemory:
+    """
+    Rolling-window store of (user_message, assistant_reply) pairs.
+
+    Keeps at most ``max_turns`` exchanges so that prompt size stays bounded.
+    Each session should have its own ConversationMemory instance.
+    """
+
+    def __init__(self, max_turns: int = CHAT_MEMORY_TURNS) -> None:
+        self.max_turns: int = max_turns
+        self._history: Deque[Tuple[str, str]] = deque(maxlen=max_turns)
+
+    def add(self, user_msg: str, assistant_msg: str) -> None:
+        """Append a new exchange to memory."""
+        self._history.append((user_msg, assistant_msg))
+
+    def format_for_prompt(self) -> str:
+        """
+        Return memory as a compact multi-line string for injection into prompts.
+        Format: 'User: …\\nAssistant: …\\n'
+        """
+        if not self._history:
+            return ""
+        lines = []
+        for user_msg, asst_msg in self._history:
+            lines.append(f"User: {user_msg}")
+            lines.append(f"Assistant: {asst_msg}")
+        return "\n".join(lines) + "\n"
+
+    def clear(self) -> None:
+        """Reset conversation history."""
+        self._history.clear()
+
+    def __len__(self) -> int:
+        return len(self._history)
+
+
+# ─── Itinerary Narrative ──────────────────────────────────────────────────────
+
+def generate_itinerary_narrative(
+    city: str,
+    day_plan: List[dict],
+    user_preferences: dict,
+) -> str:
+    """
+    Generate a short narrative (~100 words) for a single day's itinerary.
+
+    Parameters
+    ----------
+    city             : destination city name
+    day_plan         : list of POI dicts with at least {'name': str, 'category': str}
+    user_preferences : dict of interest → 0|1 (e.g. {'Nature': 1, 'Heritage': 0})
+
+    Returns a narrative string, or a safe fallback on failure.
+    """
+    if _model is None:
+        return "AI narration unavailable — API key missing."
+
+    if not day_plan:
+        return f"Enjoy a relaxing free day exploring {city} at your own pace!"
+
+    poi_names = ", ".join(p["name"] for p in day_plan)
+    interests  = ", ".join(k for k, v in user_preferences.items() if v)
+    interests  = interests or "general sightseeing"
+
+    # Compact prompt — estimated ~80 tokens
     prompt = (
-        f"You are an expert travel guide. Write a comprehensive, engaging summary (approx 100-120 words) for a day trip in {city}. "
-        f"The itinerary includes these places in order: {pois}. "
-        f"The traveler is interested in: {interests}. "
-        "Explain the flow of the day, why these spots are great, and what unique experiences they offer. "
-        "Do not just list them; weave a narrative of the day's journey. "
-        "Mention specific details about the city's vibe and what makes this route special."
+        f"Write a vivid {NARRATIVE_MAX_WORDS}-word travel narrative for a day in {city}. "
+        f"Stops (in order): {poi_names}. "
+        f"Traveller interests: {interests}. "
+        "Weave a flowing story — don't just list places."
     )
 
     try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return "Enjoy your day exploring these beautiful locations!"
+        response = _model.generate_content(prompt)
+        return response.text.strip()
+    except genai.types.BlockedPromptException:
+        logger.warning("Narrative prompt was blocked by safety filters.")
+        return f"Discover {city}'s highlights through these carefully chosen stops!"
+    except Exception as exc:
+        logger.error("Narrative generation failed: %s", exc)
+        return f"Enjoy exploring {city} — these spots promise an unforgettable day!"
 
-def chat_with_ai(message, itinerary=None):
-    if not model:
-        return "I'm sorry, my AI brain is sleeping (API Key missing). Please check your configuration."
 
-    try:
-        itinerary_context = ""
-        if itinerary and "itinerary" in itinerary:
-            itinerary_summary = []
-            for day, details in itinerary["itinerary"].items():
-                pois = ", ".join([p["name"] for p in details.get("pois", [])])
-                itinerary_summary.append(f"{day.capitalize()}: {pois}")
+# ─── Chatbot ──────────────────────────────────────────────────────────────────
 
-            itinerary_context = (
-                "\n--- Current Itinerary Context ---\n"
-                f"The user has generated an itinerary for {itinerary.get('num_days', 'some')} days. "
-                "The planned stops are:\n" + "\n".join(itinerary_summary) + "\n"
-                "-----------------------------------\n\n"
+def chat_with_ai(
+    message: str,
+    itinerary: dict | None = None,
+    memory: ConversationMemory | None = None,
+) -> str:
+    """
+    Answer a travel-related user message, optionally with itinerary context
+    and rolling conversation memory.
+
+    Parameters
+    ----------
+    message   : the user's latest message
+    itinerary : optional itinerary dict from /api/plan-trip response
+    memory    : optional ConversationMemory instance for multi-turn chats
+
+    Returns assistant reply string.
+    """
+    if _model is None:
+        return "AI assistant unavailable — API key not configured."
+
+    # Build compact itinerary context (only if provided)
+    itinerary_block = ""
+    if itinerary and isinstance(itinerary.get("itinerary"), dict):
+        lines = []
+        for day, details in itinerary["itinerary"].items():
+            names = ", ".join(p["name"] for p in details.get("pois", []))
+            lines.append(f"{day.capitalize()}: {names}")
+        if lines:
+            itinerary_block = (
+                "[Itinerary]\n" + "\n".join(lines) + "\n[/Itinerary]\n\n"
             )
 
-        prompt = (
-            "You are Wanderly AI, a highly knowledgeable and friendly travel assistant. "
-            "Your goal is to help users with ANY travel-related questions, including their specific itinerary. "
-            f"{itinerary_context}"
-            "Answer the following question. If the user asks about 'my trip' or specific days, "
-            "refer to the itinerary context provided above. "
-            "\n\n"
-            "Keep your answers helpful, concise, and professional. "
-            "If a question is completely unrelated to travel, politely redirect them.\n\n"
-            f"User Query: {message}\n"
-            "Wanderly AI:"
-        )
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return "I'm having trouble connecting to the travel network right now. Please try again later."
+    # Build conversation history block
+    history_block = ""
+    if memory and len(memory) > 0:
+        history_block = "[History]\n" + memory.format_for_prompt() + "[/History]\n\n"
+
+    prompt = (
+        "You are Wanderly AI, a friendly travel assistant. "
+        "Answer travel questions concisely and helpfully. "
+        "For non-travel topics, politely redirect.\n\n"
+        f"{itinerary_block}"
+        f"{history_block}"
+        f"User: {message}\n"
+        "Wanderly AI:"
+    )
+
+    try:
+        response = _model.generate_content(prompt)
+        reply = response.text.strip()
+
+        # Update memory with this exchange
+        if memory is not None:
+            memory.add(message, reply)
+
+        return reply
+    except genai.types.BlockedPromptException:
+        logger.warning("Chat prompt blocked by Gemini safety filters.")
+        return "I can't answer that, but I'm happy to help with your travel plans!"
+    except Exception as exc:
+        logger.error("Chat generation failed: %s", exc)
+        return "I'm having trouble connecting right now. Please try again in a moment."

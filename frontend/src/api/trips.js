@@ -11,12 +11,18 @@ export async function planTrip(formData) {
     headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(formData),
   });
-  return res.json();
+  const data = await res.json();
+  // Handle envelope if the node proxy hasn't restarted yet
+  if (data.data && typeof data.data === "object") {
+    return { ...data.data, _tripId: data._tripId };
+  }
+  return data;
 }
 
 export async function fetchCities() {
   const res = await fetch(`${API_URL}/api/trips/cities`);
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.data || []);
 }
 
 export async function saveItinerary(tripId, title) {

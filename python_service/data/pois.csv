@@ -63,7 +63,7 @@ id,name,city,lat,lon,category,avg_spend,avg_stay_hours,rating
 62,Sarojini Nagar,Delhi,28.575,77.198,shopping,500,3,4.3
 63,Dilli Haat,Delhi,28.572,77.208,culture,200,2,4.5
 64,Agrasen ki Baoli,Delhi,28.626,77.225,heritage,0,1,4.4
-65,National Museum,Delhi,28.611,77.219,history,200,3,4.5
+65,National Museum,Delhi,28.611,77.219,museum,200,3,4.5
 66,Hauz Khas Village,Delhi,28.553,77.194,nightlife,800,3,4.4
 67,Waste to Wonder,Delhi,28.595,77.262,park,100,2,4.5
 68,Mughal Gardens,Delhi,28.614,77.195,nature,0,1.5,4.6
@@ -201,3 +201,71 @@ id,name,city,lat,lon,category,avg_spend,avg_stay_hours,rating
 200,Oceanos,Kochi,9.957,76.244,food,600,1.5,4.4
 201,Johnson's Cafe,Manali,32.245,77.189,food,500,1.5,4.4
 202,Cafe 1947,Manali,32.253,77.172,food,600,1.5,4.5
+203,Marina Beach,Chennai,13.0500,80.2824,beach,0,3,4.5
+204,Kapaleeshwarar Temple,Chennai,13.0339,80.2698,heritage,0,1.5,4.6
+205,Fort St. George,Chennai,13.0795,80.2875,heritage,200,2,4.4
+206,Government Museum,Chennai,13.0661,80.2637,museum,200,2.5,4.3
+207,Valluvar Kottam,Chennai,13.0569,80.2379,monument,50,1,4.2
+208,Elliot's Beach,Chennai,13.0002,80.2706,beach,0,2,4.3
+209,VGP Universal Kingdom,Chennai,12.9500,80.2500,entertainment,1200,5,4.1
+210,Arignar Anna Zoological Park,Chennai,12.8897,80.1000,nature,80,3,4.3
+211,Birla Planetarium Chennai,Chennai,13.0660,80.2429,science,100,2,4.3
+212,Santhome Cathedral,Chennai,13.0339,80.2785,heritage,0,1,4.5
+213,DakshinaChitra,Chennai,12.8905,80.2244,culture,350,3,4.6
+214,Mahabalipuram,Chennai,12.6204,80.1927,heritage,500,4,4.8
+215,Crocodile Park,Chennai,12.8200,80.2400,nature,200,2,4.2
+216,Phoenix Marketcity Chennai,Chennai,12.9930,80.2207,shopping,500,3,4.3
+217,Express Avenue Mall,Chennai,13.0615,80.2608,shopping,500,3,4.2
+218,Marina Beach Sunrise Walk,Chennai,13.0500,80.2824,nature,0,1.5,4.6
+219,Nilgiris Dept Store Chennai,Chennai,13.0664,80.2601,shopping,300,1,4.1
+220,Saravana Bhavan,Chennai,13.0569,80.2379,food,300,1,4.7
+221,Murugan Idli Shop,Chennai,13.0512,80.2509,food,150,0.5,4.8
+222,Anjappar Chettinad,Chennai,13.0534,80.2120,food,600,1.5,4.5
+223,Charminar,Hyderabad,17.3616,78.4747,heritage,50,2,4.7
+224,Golconda Fort,Hyderabad,17.3833,78.4011,heritage,200,3,4.6
+225,Hussain Sagar Lake,Hyderabad,17.4239,78.4738,nature,100,2,4.4
+226,Ramoji Film City,Hyderabad,17.2543,78.6808,entertainment,2000,8,4.5
+227,Birla Mandir Hyderabad,Hyderabad,17.4062,78.4691,heritage,0,1,4.6
+228,Salar Jung Museum,Hyderabad,17.3711,78.4804,museum,200,3,4.7
+229,Nehru Zoological Park,Hyderabad,17.3490,78.4510,nature,100,3,4.4
+230,Laad Bazaar,Hyderabad,17.3611,78.4754,shopping,400,2,4.3
+231,Chowmahalla Palace,Hyderabad,17.3592,78.4726,heritage,500,2,4.6
+232,Snow World Hyderabad,Hyderabad,17.4340,78.3800,entertainment,600,3,4.2
+233,Qutb Shahi Tombs,Hyderabad,17.3960,78.4020,heritage,200,2,4.5
+234,Lumbini Park,Hyderabad,17.4143,78.4737,nature,60,1.5,4.3
+235,NTR Gardens,Hyderabad,17.4175,78.4686,nature,20,1.5,4.2
+236,Shilparamam,Hyderabad,17.4531,78.3794,culture,100,2,4.4
+237,Paradise Biryani,Hyderabad,17.4432,78.4969,food,500,1,4.8
+238,Bawarchi Restaurant,Hyderabad,17.4432,78.5169,food,400,1,4.7
+239,Peshawar Restaurant,Hyderabad,17.4432,78.4669,food,700,1.5,4.5
+240,Mysore Palace,Mysuru,12.3052,76.6552,heritage,200,3,4.8
+241,Chamundeshwari Temple,Mysuru,12.2723,76.6739,heritage,0,2,4.6
+242,Brindavan Gardens,Mysuru,12.4376,76.5727,nature,100,3,4.7
+243,Mysore Zoo,Mysuru,12.2990,76.6570,nature,100,3,4.5
+244,St. Philomena's Church,Mysuru,12.3154,76.6487,heritage,0,1,4.4
+245,Jaganmohan Palace,Mysuru,12.3063,76.6504,museum,200,2,4.4
+246,Karanji Lake,Mysuru,12.2957,76.6495,nature,0,1.5,4.3
+247,Rail Museum Mysore,Mysuru,12.2964,76.6373,museum,50,1.5,4.3
+248,Chamundi Hills,Mysuru,12.2723,76.6739,viewpoint,0,2,4.6
+249,Devaraja Market,Mysuru,12.3095,76.6541,shopping,300,1.5,4.4
+250,Folklore Museum,Mysuru,12.3199,76.6491,museum,100,1.5,4.2
+251,Mysore Dasara Grounds,Mysuru,12.3061,76.6542,culture,100,1,4.5
+252,Hotel RRR Mysore,Mysuru,12.2967,76.6441,food,400,1,4.6
+253,Vinayaka Mylari,Mysuru,12.2967,76.6441,food,200,0.5,4.7
+254,Lalitha Mahal Palace Dining,Mysuru,12.3188,76.6625,food,2000,2,4.5
+255,Triveni Sangam,Rishikesh,30.1087,78.2941,heritage,0,2,4.6
+256,Laxman Jhula,Rishikesh,30.1268,78.3218,landmark,0,1.5,4.7
+257,Ram Jhula,Rishikesh,30.1144,78.3138,landmark,0,1,4.6
+258,Neer Garh Waterfall,Rishikesh,30.1417,78.3517,nature,50,2,4.5
+259,Rajaji National Park,Rishikesh,30.0000,78.1667,nature,500,5,4.6
+260,Beatles Ashram,Rishikesh,30.1200,78.3150,culture,200,1.5,4.5
+261,Neelkanth Mahadev Temple,Rishikesh,30.1983,78.3683,heritage,0,2,4.7
+262,White Water Rafting,Rishikesh,30.1300,78.3000,adventure,1500,4,4.8
+263,Bungee Jumping Mohan Chatti,Rishikesh,30.0833,78.2667,adventure,3500,3,4.7
+264,Camping by the Ganges,Rishikesh,30.1500,78.3200,adventure,2000,6,4.6
+265,Parmarth Niketan Ganga Aarti,Rishikesh,30.1198,78.3137,culture,0,2,4.8
+266,Swarg Ashram,Rishikesh,30.1220,78.3160,heritage,0,1.5,4.4
+267,Trimbakeshwar Ashram,Rishikesh,30.1140,78.3100,heritage,0,1,4.3
+268,German Bakery Rishikesh,Rishikesh,30.1268,78.3218,food,400,1,4.4
+269,Little Buddha Cafe,Rishikesh,30.1268,78.3218,food,500,1.5,4.5
+270,Chotiwala Restaurant,Rishikesh,30.1144,78.3138,food,350,1,4.4

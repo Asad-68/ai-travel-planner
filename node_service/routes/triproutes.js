@@ -43,11 +43,12 @@ router.post("/plan", optionalAuth, async (req, res) => {
     };
 
     const pythonRes = await axios.post(`${PYTHON_BASE_URL}/api/plan-trip`, payload);
+    const resultData = pythonRes.data.data || pythonRes.data;
 
     const trip = await Trip.create({
       ...body,
       userId: req.userId || null,
-      result: pythonRes.data,
+      result: resultData,
     });
 
     res.json({ ...trip.result, _tripId: trip._id });
@@ -99,7 +100,7 @@ router.delete("/saved/:id", authMiddleware, async (req, res) => {
 router.get("/cities", async (req, res) => {
   try {
     const response = await axios.get(`${PYTHON_BASE_URL}/api/cities`);
-    res.json(response.data);
+    res.json(response.data.data || response.data);
   } catch (err) {
     console.error("Error fetching cities:", err.message);
     res.status(500).json({ error: "Failed to fetch cities" });
@@ -109,7 +110,7 @@ router.get("/cities", async (req, res) => {
 router.post("/chat", async (req, res) => {
   try {
     const response = await axios.post(`${PYTHON_BASE_URL}/api/chat`, req.body);
-    res.json(response.data);
+    res.json(response.data.data || response.data);
   } catch (error) {
     console.error("Error in chat proxy:", error.message);
     res.status(500).json({ error: "Failed to chat with AI" });
