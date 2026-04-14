@@ -15,6 +15,7 @@ function AppInner() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [tripId, setTripId] = useState(null);
+  const [planError, setPlanError] = useState(null);
   const [theme, setTheme] = useState("dark");
   const [showAuth, setShowAuth] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
@@ -33,11 +34,18 @@ function AppInner() {
 
   const handlePlan = async (formData) => {
     setLoading(true);
+    setResult(null);     // clear stale result on each new attempt
+    setPlanError(null);
     try {
       const data = await planTrip(formData);
-      setTripId(data._tripId || null);
-      setResult(data);
-    } catch {
+      if (data && data.error) {
+        setPlanError(data.error);
+      } else {
+        setTripId(data._tripId || null);
+        setResult(data);
+      }
+    } catch (err) {
+      setPlanError(err.message || "Failed to connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +128,7 @@ function AppInner() {
       <main className="main-content">
         <div className="content-grid">
           <TripForm onPlan={handlePlan} loading={loading} />
-          <ItineraryView result={result} tripId={tripId} />
+          <ItineraryView result={result} tripId={tripId} error={planError} />
         </div>
         <Chatbot itinerary={result} />
       </main>

@@ -41,6 +41,37 @@ else:
     _model = None
     logger.warning("GEMINI_API_KEY not set — AI features disabled.")
 
+_MAX_RETRIES = 3          # max retry attempts on 429
+_RETRY_BASE_WAIT = 12.0   # seconds to wait before first retry
+
+
+# ─── Retry Helper ─────────────────────────────────────────────────────────────
+
+def _generate_with_retry(prompt: str) -> str:
+    """
+    Call _model.generate_content(prompt) with exponential-backoff retries
+    on HTTP 429 (rate limit / quota exceeded) errors.
+
+    Raises any non-429 exception immediately (or after all retries exhausted).
+    Returns the response text on success.
+    """
+    import time
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            response = _model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as exc:
+            err_str = str(exc)
+            if "429" in err_str and attempt < _MAX_RETRIES:
+                wait = _RETRY_BASE_WAIT * attempt
+                logger.warning(
+                    "Gemini 429 on attempt %d/%d — retrying in %.0fs",
+                    attempt, _MAX_RETRIES, wait,
+                )
+                time.sleep(wait)
+            else:
+                raise
+
 
 # ─── Conversation Memory ──────────────────────────────────────────────────────
 
@@ -118,8 +149,7 @@ def generate_itinerary_narrative(
     )
 
     try:
-        response = _model.generate_content(prompt)
-        return response.text.strip()
+        return _generate_with_retry(prompt)
     except genai.types.BlockedPromptException:
         logger.warning("Narrative prompt was blocked by safety filters.")
         return f"Discover {city}'s highlights through these carefully chosen stops!"
@@ -178,8 +208,7 @@ def chat_with_ai(
     )
 
     try:
-        response = _model.generate_content(prompt)
-        reply = response.text.strip()
+        reply = _generate_with_retry(prompt)
 
         # Update memory with this exchange
         if memory is not None:

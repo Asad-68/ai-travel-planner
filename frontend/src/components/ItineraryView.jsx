@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { saveItinerary } from "../api/trips";
 
-export default function ItineraryView({ result, tripId }) {
+export default function ItineraryView({ result, tripId, error }) {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -17,6 +17,18 @@ export default function ItineraryView({ result, tripId }) {
     setToast(true);
     setTimeout(() => setToast(false), 3000);
   };
+
+  if (error) {
+    return (
+      <div className="glass-card fade-in">
+        <div className="itinerary-empty">
+          <div className="itinerary-empty-icon">⚠️</div>
+          <h3>Trip planning failed</h3>
+          <p style={{ color: "var(--color-warning, #f59e0b)" }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!result) {
     return (

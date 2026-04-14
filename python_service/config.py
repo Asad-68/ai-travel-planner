@@ -62,7 +62,7 @@ FLASK_DEBUG        = os.getenv("FLASK_DEBUG", "false").lower() == "true"
 
 # ─── AI / Gemini Settings ─────────────────────────────────────────────────────
 
-GEMINI_MODEL_NAME     = os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash")
+GEMINI_MODEL_NAME     = os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash-lite")
 NARRATIVE_MAX_WORDS   = 120
 CHAT_MEMORY_TURNS     = 6       # Number of (user, assistant) pairs to keep in memory
 
